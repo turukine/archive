@@ -1,19 +1,66 @@
-import zipfile
-import os
-
-def zip_files(file_paths, output_zip):
-    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file in file_paths:
-            if os.path.isfile(file):
-                zipf.write(file, os.path.basename(file))
-            elif os.path.isdir(file):
-                for root, _, files in os.walk(file):
-                    for f in files:
-                        file_path = os.path.join(root, f)
-                        arcname = os.path.relpath(file_path, os.path.dirname(file))
-                        zipf.write(file_path, arcname)
+class LZWCompressor:
+    def __init__(self):
+        self.max_dict_size = 256 
     
-    print(f"Архив {output_zip} успешно создан!")
+    def compress(self, data):
 
-files_to_zip = ["file1.txt", "тест.txt"] 
-zip_files(files_to_zip, "archive.zip")
+        dictionary = {chr(i): i for i in range(self.max_dict_size)}
+        next_code = self.max_dict_size
+        compressed = []
+        w = ""
+        
+        for c in data:
+            wc = w + c
+            if wc in dictionary:
+                w = wc
+            else:
+                compressed.append(dictionary[w])
+                dictionary[wc] = next_code
+                next_code += 1
+                w = c
+        
+        if w:
+            compressed.append(dictionary[w])
+        
+        
+        return compressed
+    
+    def decompress(self, compressed_data):
+
+        dictionary = {i: chr(i) for i in range(self.max_dict_size)}
+        next_code = self.max_dict_size
+        decompressed = []
+        w = chr(compressed_data.pop(0))
+        decompressed.append(w)
+        
+        for k in compressed_data:
+            if k in dictionary:
+                entry = dictionary[k]
+            elif k == next_code:
+                entry = w + w[0]
+            else:
+                raise ValueError("Некорректный сжатый код: %d" % k)
+            
+            decompressed.append(entry)
+            
+            dictionary[next_code] = w + entry[0]
+            next_code += 1
+            w = entry
+        
+        return ''.join(decompressed)
+
+
+if __name__ == "__main__":
+    compressor = LZWCompressor()
+    
+    original_text = "TOBEORNOTTOBEORTOBEORNOT"
+    print("Исходный текст:", original_text)
+    
+    compressed = compressor.compress(original_text)
+    print("Сжатые данные:", compressed)
+
+    decompressed = compressor.decompress(compressed.copy())
+    print("распакованный текст:", decompressed)
+    
+
+    print("совпадение ", original_text == decompressed)
