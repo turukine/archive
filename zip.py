@@ -2,13 +2,6 @@ import zipfile
 import os
 
 def zip_files(file_paths, output_zip):
-    """
-    Архивирует файлы в ZIP-архив.
-
-
-    :param file_paths: Список путей к файлам для архивации.
-    :param output_zip: Имя выходного ZIP-файла.
-    """
     with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for file in file_paths:
             if os.path.isfile(file):
@@ -22,6 +15,5 @@ def zip_files(file_paths, output_zip):
     
     print(f"Архив {output_zip} успешно создан!")
 
-# Пример использования
 files_to_zip = ["file1.txt", "тест.txt"] 
 zip_files(files_to_zip, "archive.zip")
